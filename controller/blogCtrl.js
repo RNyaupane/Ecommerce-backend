@@ -35,8 +35,8 @@ const getBlog = asyncHandler(async (req, res) => {
     validateMongodbId(id);
     try {
         const getBlog = await Blog.findById(id)
-        .populate('likes')
-        .populate('dislikes');
+            .populate('likes')
+            .populate('dislikes');
         await Blog.findByIdAndUpdate(id, {
             $inc: { numViews: 1 }
         }, { new: true }
@@ -99,13 +99,13 @@ const likeBlog = asyncHandler(async (req, res) => {
     if (isLiked) {
         const blog = await Blog.findByIdAndUpdate(blogId, {
             $pull: { likes: loginUserId },
-            isLiked : false
+            isLiked: false
         }, { new: true });
         res.json(blog);
-    }else{
+    } else {
         const blog = await Blog.findByIdAndUpdate(blogId, {
             $push: { likes: loginUserId },
-            isLiked : true
+            isLiked: true
         }, { new: true });
         res.json(blog);
     }
@@ -143,13 +143,13 @@ const dislikeBlog = asyncHandler(async (req, res) => {
     if (isDisliked) {
         const blog = await Blog.findByIdAndUpdate(blogId, {
             $pull: { dislikes: loginUserId },
-            isDisliked : false
+            isDisliked: false
         }, { new: true });
         res.json(blog);
-    }else{
+    } else {
         const blog = await Blog.findByIdAndUpdate(blogId, {
             $push: { dislikes: loginUserId },
-            isDisliked : true
+            isDisliked: true
         }, { new: true });
         res.json(blog);
     }
