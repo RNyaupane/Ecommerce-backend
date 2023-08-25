@@ -232,46 +232,76 @@ const updatePassword = asyncHandler(async(req, res)=>{
 
 //Forgot Password
 const forgotPasswordToken = asyncHandler(async (req, res) => {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) throw new Error("User not found with this email");
-    
     try {
+        const { email } = req.body;
+        
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new Error("User not found with this email");
+        }
+        
+        // Generate a password reset token
         const token = await user.createPasswordResetToken();
         await user.save();
-        const resetURL = `Hi, <a href="http://localhost:5000/api/user/reset-password/${token}">Click Here <a/> to reset password, link expires after 10 minutes.`;
         
-        const data = {
+        // Construct the password reset URL
+        const resetURL = `Hi there, <a href="http://localhost:5000/api/user/reset-password/${token}">Click Here<a/> to reset your password. Please note that the link expires after 10 minutes.`;
+        
+        // Prepare email data
+        const emailData = {
             to: email,
-            subject: "Forgot Password Link",
-            text: "Hey, Hope this email finds you well.",
+            subject: "Password Reset Link",
+            text: "Hello! We received a request to reset your password.",
             html: resetURL,
         };
-        sendEmail(data); // Await the sendEmail function
-        res.json(token);
+        
+        // Send the password reset email
+        await sendEmail(emailData);
+        
+        res.json({ message: "Password reset token has been sent to your email.", token});
     } catch (error) {
-        throw new Error(error);
+        // Handle any errors that occur during the process
+        res.status(500).json({ error: "An error occurred while processing your request." });
     }
 });
 
 
 
+
 //Reset Password
-const resetPassword = asyncHandler(async(req,res)=>{
-    const { password } = req.body;
-    const token = req.params.token; 
-    const hashedToken = crypto.createHash('sha256').update(token).digest("hex");
-    const user = await User.findOne({
-        passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: Date.now()},
-    })
-    if(!user) throw new Error("Token Expired, Please Try again later");
-    user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save();
-    res.json(user);
+const resetPassword = asyncHandler(async (req, res) => {
+    try {
+        const { password } = req.body;
+        const token = req.params.token;
+        
+        // Hash the token using SHA-256
+        const hashedToken = crypto.createHash('sha256').update(token).digest("hex");
+        
+        // Find a user with a valid reset token and not expired
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() },
+        });
+        
+        if (!user) {
+            throw new Error("Token Expired or Invalid, Please request a new reset link.");
+        }
+        
+        // Update the user's password and reset token details
+        user.password = password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        
+        // Respond with a success message or user object (based on preference)
+        res.json({ message: "Password reset successful.", user });
+    } catch (error) {
+        // Handle errors that occur during the process
+        res.status(400).json({ error: error.message });
+    }
 });
+
 
 
 

@@ -1,5 +1,7 @@
 const Product = require('../models/productModel');
+const User = require('../models/userModel')
 const asyncHandler = require('express-async-handler');
+const validateMongodbId = require('../utils/validateMongodbId');
 const slugify = require('slugify');
 
 
@@ -21,6 +23,7 @@ const createProduct = asyncHandler(async (req, res) => {
 //Update Product
 const updateProduct = asyncHandler(async (req, res) => {
     const id = req.params.id; // Extract the id from req.params
+    validateMongodbId(id);
     try {
         if (req.body.title) {
             req.body.slug = slugify(req.body.title);
@@ -41,6 +44,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 //Delete Product
 const deleteProduct = asyncHandler(async (req, res) => {
     const id = req.params.id; // Extract the id from req.params
+    validateMongodbId(id);
     try {
         const deleteProduct = await Product.findOneAndDelete({ _id: id });
 
@@ -59,6 +63,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 //Get Product
 const getaProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    validateMongodbId(id);
     try {
         const findProduct = await Product.findById(id);
         res.json(findProduct);
@@ -87,8 +92,8 @@ const getAllProduct = asyncHandler(async (req, res) => {
         if (req.query.sort) {
             const sortBy = req.query.sort.split(',').join(" ");
             query = query.sort(sortBy)
-        } else { 
-            query = query.sort('-createdAt'); 
+        } else {
+            query = query.sort('-createdAt');
         }
 
 
@@ -104,14 +109,13 @@ const getAllProduct = asyncHandler(async (req, res) => {
         //Pagination
         const page = req.query.page;
         const limit = req.query.limit;
-        const skip = (page -1)*limit;
+        const skip = (page - 1) * limit;
         query = query.skip(skip).limit(limit);
-        if(req.query.page){
+        if (req.query.page) {
             const productCount = await Product.countDocuments();
-            if(skip >= productCount) throw new Error("This Page Doesnot exist");
+            if (skip >= productCount) throw new Error("This Page Doesnot exist");
         }
-        console.log(page,limit,skip);
-
+        console.log(page, limit, skip);
 
         const product = await query;
         res.json(product);
@@ -122,7 +126,70 @@ const getAllProduct = asyncHandler(async (req, res) => {
 })
 
 
+const addToWishlist = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { productId } = req.body;
+    try {
+        const user = await User.findById(_id);
+        const alreadyAdded = user.wishlist.find((id) => id.toString() === productId);
+        if (alreadyAdded) {
+            let user = await User.findByIdAndUpdate(_id, {
+                $pull: { wishlist: productId },
+            }, {
+                new: true,
+            })
+            res.json(user);
+        } else {
+            let user = await User.findByIdAndUpdate(_id, {
+                $push: { wishlist: productId },
+            }, {
+                new: true,
+            })
+            res.json(user);
+        }
+    } catch (error) {
+        throw new Error(error);
+    }
+})
 
+
+//Rating
+const rating = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { star, productId } = req.body;
+    try {
+        const product = await Product.findById(productId);
+
+        //check already rated or not
+        let alreadyRated = product.ratings.find((userId) => userId.postedby.toString() === _id.toString());
+        if (alreadyRated) {
+            const updateRating = await Product.updateOne({
+                ratings: { $elemMatch: alreadyRated},
+            },
+            {
+                $set:{"ratings.$.star":star}
+            },
+            {
+                new:true,
+            })
+            res.json(updateRating)
+        }
+        else {
+            const rateProduct = await Product.findByIdAndUpdate(productId, {
+                $push: {
+                    ratings: {
+                        star: star,
+                        postedby: _id,
+                    },
+                },
+            }, { new: true });
+            res.json(rateProduct);
+        }
+    }
+    catch (error) {
+        throw new Error(error);
+    }
+})
 
 
 
@@ -133,4 +200,6 @@ module.exports = {
     getAllProduct,
     updateProduct,
     deleteProduct,
+    addToWishlist,
+    rating
 };
