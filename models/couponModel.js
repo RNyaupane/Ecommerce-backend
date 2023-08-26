@@ -6,20 +6,14 @@ var couponSchema = new mongoose.Schema({
         type:String,
         required:true,
         unique:true,
-        index:true,
+        uppercase: true,
     },
-    email:{
-        type:String,
+    expiry:{
+        type:Date,
         required:true,
-        unique:true,
     },
-    mobile:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    password:{
-        type:String,
+    discount:{
+        type:Number,
         required:true,
     },
 });
