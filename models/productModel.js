@@ -39,10 +39,8 @@ var productSchema = new mongoose.Schema({
         // Select false to hide from user
     },
     images: [],
-    color: {
-        type: String,
-        required: true,
-    },
+    color: [],
+    tags:[],
     ratings: [{
         star: Number,
         comment: String,
