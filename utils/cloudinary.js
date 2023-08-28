@@ -14,6 +14,9 @@ const cloudnairyUploadImg = async (fileToUploads) => {
         cloudnairy.uploader.upload(fileToUploads, (result) => {
             resolve({
                 url: result.secure_url,
+                asset_id: result.asset_id,
+                public_id: result.public_id,
+
             }, {
                 resource_type: "auto",
             })
@@ -21,4 +24,22 @@ const cloudnairyUploadImg = async (fileToUploads) => {
     })
 }
 
-module.exports = cloudnairyUploadImg;
+const cloudnairyDeleteImg = async (fileToDelete) => {
+    return new Promise((resolve) => {
+        cloudnairy.uploader.destroy(fileToDelete, (result) => {
+            resolve({
+                url: result.secure_url,
+                asset_id: result.asset_id,
+                public_id: result.public_id,
+
+            }, {
+                resource_type: "auto",
+            })
+        })
+    })
+}
+
+module.exports = {
+    cloudnairyUploadImg,
+    cloudnairyDeleteImg
+};
