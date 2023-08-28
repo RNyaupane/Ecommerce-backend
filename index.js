@@ -9,6 +9,7 @@ const blogRouter = require('./routes/blogRoute')
 const productCategoryRouter = require('./routes/ProductCategoryRoute')
 const blogCategoryRouter = require('./routes/blogCategoriyRoute')
 const brandRouter = require('./routes/brandRoute')
+const enquiryRouter = require('./routes/enqRoute')
 const colorRouter = require('./routes/colorRoute')
 const couponRouter = require('./routes/couponRoute')
 const bodyParser = require('body-parser');
@@ -29,6 +30,7 @@ app.use("/api/productcategory", productCategoryRouter )
 app.use("/api/blogcategory", blogCategoryRouter )
 app.use("/api/brand", brandRouter)
 app.use("/api/color", colorRouter)
+app.use("/api/enquiry", enquiryRouter)
 app.use("/api/coupon", couponRouter )
 
 
