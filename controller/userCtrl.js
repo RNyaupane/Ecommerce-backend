@@ -1,5 +1,7 @@
 const { generateToken } = require('../config/jwtToken');
 const User = require('../models/userModel');
+const Product = require('../models/productModel');
+const Cart = require('../models/cartModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../utils/validateMongodbId');
 const { generateRefreshToken } = require('../config/refreshtoken');
@@ -204,7 +206,7 @@ const updatedUser = asyncHandler(async (req, res) => {
 
 //Save user address
 const saveAddress = asyncHandler(async (req, res, next) => {
-    const {_id} = req.user;
+    const { _id } = req.user;
     validateMongodbId(_id);
     try {
         const updatedUser = await User.findByIdAndUpdate(_id, {
@@ -363,6 +365,71 @@ const getWishlist = asyncHandler(async (req, res) => {
 })
 
 
+//Create user cart
+const userCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { cart } = req.body;
+    // validateMongodbId(_id);
+    try {
+        let products = [];
+        const user = await User.findById(_id);
+        //Check if user already have product in cart
+        const alreadyExistCart = await Cart.findOne({ orderby: user._id });
+        if (alreadyExistCart) {
+            await Cart.findOneAndDelete({ orderby: user._id });
+        }
+        for (let i = 0; i < cart.length; i++) {
+            let object = {};
+            object.product = cart[i]._id;
+            object.count = cart[i].count;
+            object.color = cart[i].color;
+            let getPrice = await Product.findById(cart[i]._id).select('price').exec();
+            object.price = getPrice.price;
+            products.push(object);
+        }
+        let cartTotal = 0;
+        for (let i = 0; i < products.length; i++) {
+            cartTotal = cartTotal + products[i].price * products[i].count;
+        }
+
+        let newCart = await new Cart({
+            products,
+            cartTotal,
+            orderby: user?.id,
+        }).save();
+        res.json(newCart);
+    } catch (error) {
+        throw new Error(error);
+    }
+})
+
+
+//Get user cart
+const getUserCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongodbId(_id);
+    try {
+        const cart = await Cart.findOne({ orderby: _id }).populate("products.product")
+        res.json(cart);
+    } catch (error) {
+        throw new Error(error);
+    }
+})
+
+
+//Empty Cart functionality
+const emptyCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongodbId(_id);
+    try {
+        const user = await User.findOne(_id);
+        const cart = await Cart.findOneAndRemove({ orderby: user._id });
+        res.json(cart);
+    } catch (error) {
+        throw new Error(error);
+    }
+})
+
 
 module.exports = {
     createUser,
@@ -381,4 +448,7 @@ module.exports = {
     loginAdmin,
     getWishlist,
     saveAddress,
+    userCart,
+    getUserCart,
+    emptyCart,
 };
