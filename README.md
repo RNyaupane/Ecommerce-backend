@@ -19,7 +19,7 @@ This repository contains the backend code for an eCommerce application built usi
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/ecommerce-backend.git
+   git clone https://github.com/your-username/online-bookstore-backend.git
    ```
 
 2. **Install dependencies:**
