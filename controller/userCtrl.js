@@ -32,33 +32,71 @@ const createUser = asyncHandler(async (req, res) => {
 
 
 //Login a User
+// const loginUserCtrl = asyncHandler(async (req, res) => {
+//     const { email, password } = req.body;
+//     //check if user exist or not
+//     const findUser = await User.findOne({ email })
+//     if (findUser && await findUser.isPasswordMatched(password)) {
+//         const refreshToken = await generateRefreshToken(findUser?._id);
+//         const updateUser = await User.findByIdAndUpdate(findUser.id, {
+//             refreshToken: refreshToken,
+//         }, {
+//             new: true
+//         })
+//         res.cookie('refreshToken', refreshToken, {
+//             httpOnly: true,
+//             maxAge: 72 * 60 * 60 * 1000,
+//         });
+//         res.json({
+//             id: findUser?._id,
+//             firstname: findUser?.firstname,
+//             lastname: findUser.lastname,
+//             email: findUser.email,
+//             mobile: findUser.mobile,
+//             token: generateToken(findUser?._id),
+//         });
+//     } else {
+//         throw new Error("Invalid Credentials")
+//     }
+// })
 const loginUserCtrl = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    //check if user exist or not
-    const findUser = await User.findOne({ email })
+
+    // Check if the user exists
+    const findUser = await User.findOne({ email });
+
     if (findUser && await findUser.isPasswordMatched(password)) {
+        // Generate a new refresh token
         const refreshToken = await generateRefreshToken(findUser?._id);
+
+        // Update the user's refresh token
         const updateUser = await User.findByIdAndUpdate(findUser.id, {
             refreshToken: refreshToken,
         }, {
             new: true
-        })
+        });
+
+        // Set the refresh token as an HTTP-only cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            maxAge: 72 * 60 * 60 * 1000,
+            maxAge: 72 * 60 * 60 * 1000, // 72 hours
         });
+
+        // Respond with user information and access token
         res.json({
             id: findUser?._id,
             firstname: findUser?.firstname,
-            lastname: findUser.lastname,
-            email: findUser.email,
-            mobile: findUser.mobile,
+            lastname: findUser?.lastname,
+            email: findUser?.email,
+            mobile: findUser?.mobile,
             token: generateToken(findUser?._id),
         });
     } else {
-        throw new Error("Invalid Credentials")
+        // Invalid credentials
+        throw new Error("Invalid Credentials");
     }
-})
+});
+
 
 
 //Admin Login
