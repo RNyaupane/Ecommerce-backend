@@ -38,18 +38,21 @@ var productSchema = new mongoose.Schema({
         default: 0,
         // Select false to hide from user
     },
-    images: [],
+    images: [{
+        public_id: String,
+        url: String
+    }],
     color: [],
-    tags:[],
+    tags: [],
     ratings: [{
         star: Number,
         comment: String,
         postedby: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
     },],
-    totalrating:{
+    totalrating: {
         type: String,
         default: 0,
-    }, 
+    },
 
 }, {
     timestamps: true
