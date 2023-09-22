@@ -43,11 +43,24 @@ const deleteCoupon = asyncHandler(async (req, res) => {
     }
 })
 
+const getCoupon = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    validateMongodbId(id);
+    try {
+        const singleCoupon = await Coupon.findById(id);
+        res.json(singleCoupon);
+    } catch (error) {
+        throw new Error(error);
+    }
+})
+
+
 
 module.exports = {
     createCoupon,
     getAllCoupons,
     updateCoupon,
     deleteCoupon,
+    getCoupon
 
 }
