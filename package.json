@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest",
     "start": "node index.js",
-    "server": "nodemon index.js"
+    "server": "nodemon index.js",
+    "main": "index.js",
+    "type": "module"
   },
   "author": "",
   "license": "ISC",
